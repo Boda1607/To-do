@@ -66,7 +66,7 @@ This is a modern, responsive, and feature-rich To-Do web application designed to
 
 ## 📁 Project Structure
 
-
+```
 .
 ├── index.html             # Main application HTML with core UI and inline JavaScript logic.
 ├── style.css              # Contains all the styling for the application, including theme variables and responsiveness.
@@ -77,7 +77,7 @@ This is a modern, responsive, and feature-rich To-Do web application designed to
 ├── icon-light.png         # Application icon for light theme.
 ├── icon-dark.png          # Application icon for dark theme.
 └── favicon.ico            # Favicon for the browser tab.
-
+```
 
 ## 🚀 Getting Started
 
