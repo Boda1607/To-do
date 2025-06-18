@@ -1,0 +1,715 @@
+:root {
+  --bg-color-light: #ffffff;
+  --text-color-light: #000000;
+  --bg-color-dark: #18191A;
+  --text-color-dark: #ffffff;
+  --blue: #007aff;
+  --pink: #f107a3;
+  --purple: #7b2ff7;
+  --orange: #ff6f00;
+  --teal: #00bfa5;
+  --yellow: #ffea00;  
+  --nav-height: 60px;
+}
+.page {
+  display: none;
+}
+.page.active {
+  display: block;
+}
+
+/* Base Styles */
+body {
+  margin: 0;
+  padding-bottom: var(--nav-height);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Light & Dark Themes (Manual) */
+body.light {
+  background-color: var(--bg-color-light);
+  color: var(--text-color-light);
+}
+body.dark {
+  background-color: var(--bg-color-dark);
+  color: var(--text-color-dark);
+}
+body.light .bottom-nav {
+  background-color: var(--bg-color-light);
+  
+}
+body.dark .bottom-nav {
+  background-color:var(--bg-color-dark);
+  
+}
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-color, #333);
+}
+
+body.dark .theme-toggle-btn .material-symbols-outlined {
+  content: "light_mode";
+}
+
+body.light .theme-toggle-btn .material-symbols-outlined {
+  content: "dark_mode";
+}
+
+/* Main */
+main {
+  padding: 20px;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  margin-bottom: 20px;
+}
+.theme-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+/* ================================================================================= */
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-height);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  height: 80px; /* increased from var(--nav-height) */
+  background-color: inherit; /* inherit background from body.light or body.dark */
+}
+
+
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  margin-bottom: 7px;
+}
+
+.bottom-nav button i {
+  font-size: 20px;
+}
+
+.bottom-nav a.nav-link {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px;
+  text-decoration: none;
+}
+@keyframes pump {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.bottom-nav button.active {
+  background: linear-gradient(90deg, #4B0082, #C71585);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav button.active:active {
+  animation: pump 0.3s ease forwards;
+}
+
+
+/* ================================================================================= */
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #00000066; /* semi-transparent black */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); /* for Safari */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+
+.hidden {
+  display: none;
+}
+
+/* Card style */
+.card {
+  background-color: rgba(123, 47, 247, 0.2); /* soft purple tint */
+  color: var(--text-color-light);
+  padding: 20px;
+  border-radius: 12px;
+  width: 320px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(123, 47, 247, 0.2); /* optional for light border */
+}
+
+/* Dark mode card with blur */
+body.dark .card {
+  background-color: var(--bg-color-dark); /* darker blur in dark mode */
+  color: var(--text-color-dark);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* ================================================================================= */
+.form-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 14px 12px;
+  font-size: 1rem;
+  border: 2px solid #ccc; /* Default border gray */
+  border-radius: 12px;
+  background-color: var(--text-color-light);
+  color: var(--text-color-light);
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+body.dark .form-group input,
+body.dark .form-group textarea {
+  background-color: var(--text-color-light);
+  color: var(--text-color-dark);
+}
+
+/* Label styling */
+.form-group label {
+  position: absolute;
+  left: 12px;
+  top: 14px; /* you can tweak this */
+  background-color: var(--bg-color-dark);
+  padding: 0 4px;
+  color: #999;
+  font-size: 0.95rem;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+body.dark .form-group label {
+  background-color: var(--bg-color-dark);
+}
+
+/* Change border color on focus */
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--purple);
+}
+
+/* Float label when input/textarea is focused or has value */
+.form-group input:focus + label,
+.form-group textarea:focus + label,
+.form-group input:not(:placeholder-shown) + label,
+.form-group textarea:not(:placeholder-shown) + label {
+  top: -7px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: var(--purple);
+}
+
+/* Override for textarea default border */
+.form-group textarea {
+  border-color: #888888; /* Gray border for textarea */
+  transition: border-color 0.3s;
+}
+
+/* On focus or typing, textarea border changes to purple */
+.form-group textarea:focus,
+.form-group textarea:not(:placeholder-shown) {
+  border-color: var(--purple);
+}
+
+/* Card inputs and textareas */
+.card input[type="text"],
+.card input[type="date"],
+.card input[type="color"],
+.card textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 4px;
+  border: 1.2px solid var(--purple); /* You can make this gray and purple on focus too if you want */
+  border-radius: 12px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  resize: vertical;
+  background-color: var(--bg-color-light);
+  color: var(--text-color-light);
+}
+
+body.dark .card input[type="text"],
+body.dark .card input[type="date"],
+body.dark .card input[type="color"],
+body.dark .card textarea {
+  background-color: var(--bg-color-dark);
+  color: var(--text-color-dark);
+}
+
+.buttons {
+  display: flex;
+  justify-content:  center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.buttons button {
+  padding: 8px 14px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.buttons button[type="submit"] {
+  background-color: var(--purple);
+  color: white;
+  padding: 8px 14px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.close-btn {
+  position: absolute;
+  top: 18px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  font-weight: bold;
+  color: inherit;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* Style the select element inside form-group */
+/* Style the select element inside form-group */
+.form-group select {
+  width: 100%;
+  padding: 14px 12px;
+  font-size: 1rem;
+  border: 1.2px solid var(--purple); /* purple border */
+  border-radius: 12px;
+  background-color: var(--bg-color-dark);
+  color: var(--text-color-light);
+  outline: none;
+  appearance: none; /* remove default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='%237b2ff7' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px 16px;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+/* Dark mode styles for select */
+body.dark .form-group select {
+  background-color: var(--bg-color-dark);
+  color: #666;
+  border-color: var(--purple);
+}
+
+
+/* ================================================================================= */
+.add-button {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: #7b2ff7; /* solid button background */
+  color: white;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  overflow: visible;
+}
+
+/* Subtle pulse border */
+.add-button::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #7b2ff7, #f107a3, #7b2ff7);
+  -webkit-mask: 
+    radial-gradient(farthest-side, transparent calc(100% - 5px), black 100%);
+  mask: 
+    radial-gradient(farthest-side, transparent calc(100% - 5px), black 100%);
+  animation: pulse-border 1.8s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Expanding ripple radiation */
+.add-button::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #7b2ff7, #f107a3, #7b2ff7);
+  -webkit-mask: 
+    radial-gradient(farthest-side, transparent calc(100% - 5px), black 100%);
+  mask: 
+    radial-gradient(farthest-side, transparent calc(100% - 5px), black 100%);
+  animation: pulse-radiation 1.8s ease-in-out infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Animations */
+
+@keyframes pulse-border {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulse-radiation {
+  0% {
+    transform: scale(1.1);
+    opacity: 0.6;
+  }
+  70% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+
+/* ================================================================================= */
+
+
+.task-list {
+  list-style: none;
+  padding: 0;
+}
+
+.task-item {
+  margin: 1em 0;
+}
+
+.task-card {
+  background: var(--card-bg);
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.task-card h3 {
+  margin: 0 0 0.2em 0;
+}
+
+.task-card .tag {
+  padding: 0.2em 0.6em;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.8em;
+}
+
+/* =====================================================================================*/
+.gradient-icon {
+  background: conic-gradient(from 0deg, #7b2ff7, #f107a3, #7b2ff7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  cursor: pointer;
+  font-size: 1.3rem;
+  user-select: none;
+}
+
+
+#categoryName,
+#categoryEmoji {
+  width: 92%;  
+}
+
+.category-list {
+  max-height: calc(5 * 60px); /* Adjust if your category items are taller/shorter */
+  overflow-y: auto;
+  padding-right: 5px; /* For scrollbar space */
+}
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 6px 0;
+  border-radius: 10px;
+  cursor: grab;
+  user-select: none;
+}
+
+.category-item.dragging {
+  opacity: 0.5;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-size: 1.3rem;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: #7b2ff7;
+}
+
+.category-item {
+  touch-action: none;
+}
+
+
+.category-item .emoji {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+/* Style for category-card */
+.category-card {
+  background-color: rgba(123, 47, 247, 0.2);
+  color: var(--text-color-light);
+  padding: 20px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 350px;
+  margin: 20px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(123, 47, 247, 0.2);
+  position: relative;
+}
+
+body.dark .category-card {
+  background-color: var(--bg-color-dark);
+  color: var(--text-color-dark);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Form input group styling */
+.category-card .form-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.category-card input[type="text"],
+.category-card input[type="color"] {
+  width: 100%;
+  padding: 14px 12px;
+  font-size: 1rem;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  background-color: var(--bg-color-light);
+  color: var(--text-color-light);
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+body.dark .category-card input[type="text"],
+body.dark .category-card input[type="color"] {
+  background-color: var(--bg-color-dark);
+  color: var(--text-color-dark);
+}
+
+/* Floating labels */
+.category-card .form-group label {
+  position: absolute;
+  left: 12px;
+  top: 14px;
+  padding: 0 4px;
+  background-color: var(--bg-color-light);
+  color: #999;
+  font-size: 0.95rem;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 1;
+}
+
+body.dark .category-card .form-group label {
+  background-color: var(--bg-color-dark);
+}
+
+.category-card input:focus,
+.category-card input:not(:placeholder-shown) {
+  border-color: var(--purple);
+}
+
+.category-card input:focus + label,
+.category-card input:not(:placeholder-shown) + label {
+  top: -7px;
+  left: 10px;
+  font-size: 0.75rem;
+  color: var(--purple);
+}
+
+/* Button styling */
+.category-card button[type="submit"] {
+  background-color: var(--purple);
+  color: white;
+  padding: 10px 16px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.category-card button[type="submit"]:hover {
+  background-color: #6a1bcf;
+}
+
+.color-picker-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-value {
+  font-family: monospace;
+  font-size: 1rem;
+  user-select: none;
+}
+
+/* =====================================================================================*/
+
+.task-item {
+  list-style: none;
+  margin-bottom: 15px;
+}
+
+.task-card.completed {
+  opacity: 0.8;
+  text-decoration: line-through;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1px;
+}
+
+.task-header-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.task-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.task-category {
+  padding: 4px 4px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.task-date {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.task-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.task-desc {
+  font-size: 1rem;
+  color: #444;
+  flex: 1;
+  margin-bottom: 1px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 25px;
+  margin-bottom: 1px;
+}
+
+.task-actions button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+

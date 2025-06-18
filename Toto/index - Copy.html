@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-do App</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+  <!-- Manifest -->
+  <link id="manifest" rel="manifest" href="manifest-light.json" />
+    <script>
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.getElementById('manifest').setAttribute('href', 'manifest-dark.json');
+      }
+    </script>
+
+
+  <!-- Icons for light/dark mode on iOS -->
+  <link rel="apple-touch-icon" href="icon-dark.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="icon-light.png" media="(prefers-color-scheme: light)">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <nav class="bottom-nav">
+    <button data-tab="tasks" class="active"><i class="fas fa-check-square"></i><span>Tasks</span></button>
+    <button data-tab="categories"><i class="fas fa-layer-group"></i><span>Categories</span></button>
+    <button class="add-button"><i class="fas fa-plus"></i></button>
+    <button data-tab="charts"><i class="fas fa-chart-line"></i><span>Charts</span></button>
+    <button data-tab="profile"><i class="fas fa-user"></i><span>Profile</span></button>
+  </nav>
+
+  <main id="mainContent">
+  <section id="tasksSection" class="page active">
+    <h1>Tasks</h1>
+
+  <div class="task-controls" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+    <input 
+      type="search" 
+      id="taskSearch" 
+      placeholder="Search tasks..." 
+      style="flex-grow: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: var(--bg-color-dark); color: var(--text-color-dark);"
+    />
+
+    <div class="sort-dropdown" style="position: relative;">
+      <button id="sortBtn" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: var(--bg-color-dark); color: var(--text-color-dark); cursor: pointer;">
+        Sort ▼
+      </button>
+      <ul id="sortOptions" style="
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--bg-color-dark);
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        list-style: none;
+        margin: 4px 0 0 0;
+        padding: 0;
+        width: 160px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        z-index: 1000;
+      ">
+        <li class="sort-option" data-sort="dateCreated" style="padding: 8px 12px; cursor: pointer; color: var(--text-color-dark);">Date Created</li>
+        <li class="sort-option" data-sort="dueDate" style="padding: 8px 12px; cursor: pointer; color: var(--text-color-dark);">Due Date</li>
+        <li class="sort-option" data-sort="alphabetical" style="padding: 8px 12px; cursor: pointer; color: var(--text-color-dark);">Alphabetical</li>
+      </ul>
+    </div>
+  </div>
+
+
+  <ul id="taskList" class="task-list">
+    <!-- Tasks will appear here -->
+  </ul>
+</section>
+
+
+    <section id="categoriesSection" class="page">
+      <h1>Categories</h1>
+
+      <!-- Display categories card -->
+      <div class="category-card" id="categoriesListCard">
+        <div id="categoryList" class="category-list">
+          <!-- Categories will be shown here -->
+        </div>
+      </div>
+
+      <!-- Add category card -->
+      <div class="category-card">
+        <h3>Add New Category</h3>
+        <form id="addCategoryForm" class="add-category-form">
+          <div class="form-group">
+            <input type="text" name="categoryName" id="categoryName" placeholder=" " required />
+            <label for="categoryName">Category Name</label>
+          </div>
+
+          <div class="form-group">
+            <input type="text" name="categoryEmoji" id="categoryEmoji" placeholder=" " maxlength="2" required />
+            <label for="categoryEmoji">Emoji (e.g. 😊)</label>
+          </div>
+
+          <div class="form-group color-picker-group">
+            <input type="color" name="categoryColor" id="categoryColor" value="#7b2ff7" />
+            <label for="categoryColor">Category Color</label>
+            <span id="colorValue" class="color-value">#7b2ff7</span>
+          </div>
+
+          <button type="submit">Add Category</button>
+        </form>
+      </div>
+    </section>
+
+<section id="chartsSection" class="page">
+  <h1>Charts</h1>
+
+  <h2>Monthly Completed Tasks</h2>
+  <canvas id="chart1" width="400" height="200"></canvas>
+
+  <h2>Task Completion Status</h2>
+  <canvas id="chart2" width="400" height="200"></canvas>
+
+  <h2>Task Category Distribution</h2>
+  <canvas id="chart3" width="400" height="200"></canvas>
+
+  <h2>Weekly Active Tasks</h2>
+  <canvas id="chart4" width="400" height="200"></canvas>
+
+  <h2>Monthly Completed vs Non-Completed Tasks</h2>
+  <canvas id="chartArea" width="400" height="200"></canvas>
+
+
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  let chart1, chart2, chart3, chart4;
+
+  function loadTasks() {
+    return JSON.parse(localStorage.getItem('tasks') || '[]');
+  }
+
+  function getMonthYear(date) {
+    const d = new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function getLast7Days() {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    return days;
+  }
+
+  function prepareData() {
+    const tasks = loadTasks();
+
+    tasks.forEach(t => {
+      if (t.completed) {
+        t.status = 'completed';
+      } else {
+        t.status = 'pending'; // adjust logic if you have in-progress
+      }
+    });
+
+    // --- Monthly Completed Tasks ---
+    const completedTasks = tasks.filter(t => t.status === 'completed' && t.completedAt);
+    const monthCounts = {};
+    completedTasks.forEach(t => {
+      const month = getMonthYear(t.completedAt);
+      monthCounts[month] = (monthCounts[month] || 0) + 1;
+    });
+    const months = Object.keys(monthCounts).sort();
+    const completedCounts = months.map(m => monthCounts[m]);
+
+    // --- Task Completion Status ---
+    const statusCounts = { completed: 0, 'in-progress': 0, pending: 0 };
+    tasks.forEach(t => {
+      if (statusCounts[t.status] !== undefined) statusCounts[t.status]++;
+    });
+
+    // --- Task Category Distribution ---
+    const categoryCounts = {};
+    tasks.forEach(t => {
+      categoryCounts[t.category] = (categoryCounts[t.category] || 0) + 1;
+    });
+
+    // --- Weekly Active Tasks ---
+    const last7Days = getLast7Days();
+    const activeTasksByDay = last7Days.map(day => {
+      const dayDate = new Date(day);
+      return tasks.filter(t => {
+        const created = new Date(t.created);
+        const completed = t.completedAt ? new Date(t.completedAt) : null;
+        return created <= dayDate && (!completed || completed >= dayDate);
+      }).length;
+    });
+
+    return {
+      monthly: { labels: months, data: completedCounts },
+      status: { 
+        labels: ['Completed', 'In Progress', 'Pending'], 
+        data: [statusCounts.completed, statusCounts['in-progress'], statusCounts.pending]
+      },
+      category: { labels: Object.keys(categoryCounts), data: Object.values(categoryCounts) },
+      weekly: { labels: last7Days, data: activeTasksByDay }
+    };
+  }
+
+  function createOrUpdateChart(chartRef, ctx, type, data, options) {
+    if (chartRef) {
+      // Update existing chart
+      chartRef.data.labels = data.labels;
+      chartRef.data.datasets[0].data = data.data;
+      chartRef.update();
+      return chartRef;
+    } else {
+      // Create new chart
+      return new Chart(ctx, {
+        type,
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: data.label || '',
+            data: data.data,
+            backgroundColor: data.backgroundColor || 'rgba(0, 122, 255, 0.7)',
+            borderColor: data.borderColor || 'rgba(0, 122, 255, 1)',
+            borderWidth: 1,
+            fill: data.fill || false,
+            tension: data.tension || 0
+          }]
+        },
+        options: options || { scales: { y: { beginAtZero: true } } }
+      });
+    }
+  }
+
+  function updateCharts() {
+    const prepared = prepareData();
+
+    // Chart 1: Monthly Completed Tasks
+    chart1 = createOrUpdateChart(chart1, document.getElementById('chart1').getContext('2d'), 'bar', {
+      labels: prepared.monthly.labels,
+      data: prepared.monthly.data,
+      label: 'Completed Tasks',
+      backgroundColor: 'rgba(0, 122, 255, 0.7)',
+      borderColor: 'rgba(0, 122, 255, 1)'
+    });
+
+    // Chart 2: Task Completion Status (Pie)
+    chart2 = createOrUpdateChart(chart2, document.getElementById('chart2').getContext('2d'), 'pie', {
+      labels: prepared.status.labels,
+      data: prepared.status.data,
+      backgroundColor: ['#4CAF50', '#FFC107', '#F44336']
+    }, {});
+
+    // Chart 3: Task Category Distribution (Doughnut)
+    chart3 = createOrUpdateChart(chart3, document.getElementById('chart3').getContext('2d'), 'doughnut', {
+      labels: prepared.category.labels,
+      data: prepared.category.data,
+      backgroundColor: [
+        '#FF5722', '#4CAF50', '#E91E63', '#3F51B5', '#009688',
+        '#FF9800', '#795548', '#FFC107', '#673AB7', '#FF6347',
+        '#8BC34A', '#9E9E9E', '#FF4081', '#2196F3', '#00BCD4',
+        '#607D8B', '#3E2723', '#CDDC39', '#E65100', '#FFEB3B', '#00E676'
+      ].slice(0, prepared.category.labels.length)
+    });
+
+    // Chart 4: Weekly Active Tasks (Line)
+    chart4 = createOrUpdateChart(chart4, document.getElementById('chart4').getContext('2d'), 'line', {
+      labels: prepared.weekly.labels,
+      data: prepared.weekly.data,
+      label: 'Active Tasks',
+      borderColor: 'rgba(255, 99, 132, 1)',
+      fill: false,
+      tension: 0.1
+    }, { scales: { y: { beginAtZero: true } } });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCharts();
+
+    // Button to refresh charts manually
+    document.getElementById('refreshChartsBtn').addEventListener('click', () => {
+      updateCharts();
+    });
+  });
+
+
+
+function loadTasks() {
+    return JSON.parse(localStorage.getItem('tasks') || '[]');
+  }
+
+function getMonthYear(date) {
+  const d = new Date(date);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+// Generate months array from 2 months ago to 3 months in the future
+function getMonthsRange() {
+  const months = [];
+  const now = new Date();
+  now.setDate(1); // normalize to first day of month
+  for (let offset = -2; offset <= 3; offset++) {
+    const m = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    months.push(`${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return months;
+}
+
+function updateAreaChart() {
+  const tasks = loadTasks();
+
+  // Initialize monthData with all months zeroed out
+  const months = getMonthsRange();
+  const monthData = {};
+  months.forEach(m => {
+    monthData[m] = { completed: 0, nonCompleted: 0 };
+  });
+
+  // Count tasks by month if they fall into our months range
+  tasks.forEach(t => {
+    const createdDate = t.created || t.createdAt || new Date().toISOString();
+    const month = getMonthYear(createdDate);
+
+    if (monthData[month]) { // only count if month in range
+      if (t.completed === true) {
+        monthData[month].completed++;
+      } else {
+        monthData[month].nonCompleted++;
+      }
+    }
+  });
+
+  const completedCounts = months.map(m => monthData[m].completed);
+  const nonCompletedCounts = months.map(m => monthData[m].nonCompleted);
+
+  const ctx = document.getElementById('chartArea').getContext('2d');
+
+  if (window.areaChartInstance) {
+    window.areaChartInstance.destroy();
+  }
+
+  window.areaChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: 'Completed Tasks',
+          data: completedCounts,
+          fill: true,
+          backgroundColor: 'rgba(75, 192, 192, 0.4)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          tension: 0.3
+        },
+        {
+          label: 'Non-Completed Tasks',
+          data: nonCompletedCounts,
+          fill: true,
+          backgroundColor: 'rgba(255, 99, 132, 0.4)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Number of Tasks' }
+        },
+        x: {
+          title: { display: true, text: 'Month' }
+        }
+      }
+    }
+  });
+}
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateAreaChart();
+
+    // Optional: manual refresh button
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      updateAreaChart();
+    });
+  });
+
+  
+  setInterval(updateCharts, 5000); // refresh every 5 seconds
+
+</script>
+
+
+
+
+    <section id="profileSection" class="page">
+      <h1>Profile</h1>
+      <button id="themeToggleBtn">Toggle Light/Dark Mode</button>
+    </section>
+  </main>
+
+  <!-- Add To-Do Modal Card (hidden by default) -->
+  <div id="addTodoModal" class="modal hidden">
+    <div class="modal-content card">
+      <button type="button" class="close-btn" id="closeModalBtn">×</button>
+      <h2>Add To-Do</h2>
+      <form id="addTodoForm">
+        <div class="form-group">
+          <input type="text" name="taskName" placeholder=" " required />
+          <label>Task Name</label>
+        </div>
+
+        <div class="form-group">
+          <textarea name="taskDescription" rows="3" placeholder=" " required></textarea>
+          <label>Task Description</label>
+        </div>
+
+        <div class="form-group">
+          <input type="date" name="taskDeadline" placeholder=" " required />
+          <label>Task Deadline</label>
+        </div>
+
+        <div class="form-group">
+          <label for="taskCategory" style=" top: -10px; left: 10px; font-size: 0.75rem; color: var(--purple); background-color: var(--bg-color-dark); padding: 0 4px; pointer-events: none; transition: all 0.2s ease; z-index: 1;">Select Category</label>
+
+          <select name="category" id="taskCategory" required>
+            <option value="" disabled selected>-- Select Category --</option>
+            <!-- Categories will be inserted here dynamically -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <input type="color" name="taskColor" value="#7b2ff7" />
+          <label>Task Color</label>
+        </div>
+
+        <div class="buttons">
+          <button type="submit">Add Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  function populateCategorySelect() {
+  const select = document.getElementById('taskCategory');
+  const categories = loadCategories();
+
+  // Save current selected value to keep user selection if possible
+  const currentValue = select.value;
+
+  // Clear previous options except placeholder
+  select.innerHTML = '<option value="" disabled selected>-- Select Category --</option>';
+
+  categories.forEach(cat => {
+    if (!cat.name) return;
+    const option = document.createElement('option');
+    option.value = cat.name;
+    option.textContent = `${cat.emoji} ${cat.name}`;
+    select.appendChild(option);
+  });
+
+  // Restore previous selected value if still exists
+  if ([...select.options].some(opt => opt.value === currentValue)) {
+    select.value = currentValue;
+  }
+}
+
+// Initial call
+populateCategorySelect();
+
+// Auto refresh categories every 4 seconds
+setInterval(populateCategorySelect, 4000);
+
+
+
+
+    // --- Existing code for modal, navigation, task handling ---
+    const sections = {
+      tasks: document.getElementById('tasksSection'),
+      categories: document.getElementById('categoriesSection'),
+      charts: document.getElementById('chartsSection'),
+      profile: document.getElementById('profileSection')
+    };
+
+    const navButtons = document.querySelectorAll('nav button[data-tab]');
+    const taskList = document.getElementById('taskList');
+    const addTodoModal = document.getElementById('addTodoModal');
+    const addButton = document.querySelector('.add-button');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const addTodoForm = document.getElementById('addTodoForm');
+
+    // Switch visible section on nav button click
+    navButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const tab = button.getAttribute('data-tab');
+        for (const key in sections) {
+          sections[key].classList.remove('active');
+        }
+        sections[tab].classList.add('active');
+
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+      });
+    });
+
+    // Show modal on add-button click
+    addButton.addEventListener('click', () => {
+      addTodoModal.classList.remove('hidden');
+    });
+
+    // Close modal button
+    closeModalBtn.addEventListener('click', () => {
+      addTodoModal.classList.add('hidden');
+    });
+
+    // Save tasks array to localStorage
+    function saveTasks(tasks) {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Load tasks from localStorage and render them
+    function loadTasks() {
+      const savedTasks = localStorage.getItem('tasks');
+      taskList.innerHTML = ''; // clear list first
+      if (!savedTasks) return;
+      const tasks = JSON.parse(savedTasks);
+      tasks.forEach((task, i) => addTaskToDOM(task, i));
+      return tasks;
+    }
+
+    let tasks = loadTasks() || [];
+
+
+    // Render a task in the DOM
+function addTaskToDOM(task, index) {
+  const li = document.createElement('li');
+  li.className = 'task-item';
+  li.dataset.index = index;
+  li.dataset.created = task.created || new Date().toISOString(); // fallback if task has no created date
+  li.dataset.deadline = task.deadline || '';
+
+
+  const completedClass = task.completed ? 'completed' : '';
+
+  const taskCard = document.createElement('div');
+  taskCard.className = `task-card ${completedClass}`;
+  taskCard.style.borderLeft = `5px solid ${task.color}`;
+  taskCard.style.borderRight = `5px solid ${task.color}`;
+  //  taskCard.style.borderTop = `1px solid ${task.color}`;
+  taskCard.style.borderBottom = `0.5px solid ${task.color}`;
+
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'task-header';
+
+  const headerLeft = document.createElement('div');
+  headerLeft.className = 'task-header-left';
+
+  const name = document.createElement('strong');
+  name.className = 'task-name';
+  name.textContent = task.name;
+  name.style.background = task.color;
+  name.style.padding = '4px 10px';
+  name.style.borderRadius = '8px';
+
+
+  const category = document.createElement('span');
+  category.className = 'task-category';
+  category.textContent = `${task.emoji} ${task.category}`;
+
+  headerLeft.appendChild(name);
+  headerLeft.appendChild(category);
+
+  const date = document.createElement('small');
+  date.className = 'task-date';
+  date.style.color = task.color;
+  date.textContent = task.deadline;
+
+  header.appendChild(headerLeft);
+  header.appendChild(date);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'task-body';
+
+  const desc = document.createElement('p');
+  desc.className = 'task-desc';
+  desc.textContent = task.description;
+
+  const actions = document.createElement('div');
+  actions.className = 'task-actions';
+
+  const completeBtn = document.createElement('button');
+  completeBtn.className = 'btn-complete';
+  completeBtn.title = 'Mark Complete';
+  completeBtn.style.color = task.color;
+  completeBtn.innerHTML = '<i class="fas fa-check"></i>';
+
+  const editBtn = document.createElement('button');
+  editBtn.className = 'btn-edit';
+  editBtn.title = 'Edit Task';
+  editBtn.style.color = task.color;
+  editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn-delete';
+  deleteBtn.title = 'Delete Task';
+  deleteBtn.style.color = task.color;
+  deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+
+  actions.appendChild(completeBtn);
+  actions.appendChild(editBtn);
+  actions.appendChild(deleteBtn);
+
+  body.appendChild(desc);
+  body.appendChild(actions);
+
+  // Combine all
+  taskCard.appendChild(header);
+  taskCard.appendChild(body);
+  li.appendChild(taskCard);
+  taskList.appendChild(li);
+}
+
+
+
+    // Handle task form submission
+addTodoForm.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const taskData = {
+    name: formData.get('taskName'),
+    description: formData.get('taskDescription'),
+    deadline: formData.get('taskDeadline'),
+    category: formData.get('category'),
+    color: formData.get('taskColor'),
+    completed: false,  // default new task not completed
+    created: new Date().toISOString()
+  };
+
+  // Check if editing existing task
+  if (addTodoForm.dataset.editIndex !== undefined) {
+    const editIndex = Number(addTodoForm.dataset.editIndex);
+    tasks[editIndex] = {
+      ...tasks[editIndex],
+      ...taskData,
+      // keep previous completed status and any timestamps like completedAt if any
+      completed: tasks[editIndex].completed || false,
+      completedAt: tasks[editIndex].completedAt || null,
+      created: tasks[editIndex].created || taskData.created
+    };
+    delete addTodoForm.dataset.editIndex;
+  } else {
+    // New task, push it
+    tasks.push(taskData);
+  }
+
+  saveTasks(tasks);
+  renderTasks();      // Update task list in UI
+  updateAreaChart();  // Refresh your chart immediately to reflect new data
+
+  addTodoModal.classList.add('hidden');
+  e.target.reset();
+});
+
+
+    // Load tasks on page load
+    loadTasks();
+
+
+function toggleTaskCompleted(index) {
+  const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  const task = tasks[index];
+
+  if (task.completed) {
+    task.completed = false;
+    delete task.completedAt;
+  } else {
+    task.completed = true;
+    task.completedAt = new Date().toISOString();
+  }
+
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  renderTasks();
+  renderCharts();
+}
+
+
+
+
+    // === Categories code ===
+const categoryListContainer = document.getElementById('categoryList');
+const addCategoryForm = document.getElementById('addCategoryForm');
+const colorInput = document.getElementById('categoryColor');
+const colorValue = document.getElementById('colorValue');
+
+colorValue.textContent = colorInput.value;
+
+colorInput.addEventListener('input', () => {
+  colorValue.textContent = colorInput.value;
+});
+
+function loadCategories() {
+  let savedCategories = localStorage.getItem('categories');
+  if (!savedCategories) {
+    const defaultCategories = [
+    { name: 'Work', color: '#FF5722', emoji: '💼' },
+    { name: 'Home', color: '#4CAF50', emoji: '🏠' },
+    { name: 'Health', color: '#E91E63', emoji: '❤️' },
+    { name: 'Shopping', color: '#3F51B5', emoji: '🛒' },
+    { name: 'Travel', color: '#009688', emoji: '✈️' },
+    { name: 'Study', color: '#9C27B0', emoji: '📚' },
+    { name: 'Fitness', color: '#FF9800', emoji: '🏋️‍♂️' },
+    { name: 'Finance', color: '#795548', emoji: '💰' },
+    { name: 'Family', color: '#FFC107', emoji: '👪' },
+    { name: 'Entertainment', color: '#673AB7', emoji: '🎬' },
+    { name: 'Cooking', color: '#FF6347', emoji: '🍳' },
+    { name: 'Gardening', color: '#8BC34A', emoji: '🌱' },
+    { name: 'Music', color: '#9E9E9E', emoji: '🎵' },
+    { name: 'Pets', color: '#FF4081', emoji: '🐾' },
+    { name: 'Social', color: '#2196F3', emoji: '💬' },
+    { name: 'Cleaning', color: '#00BCD4', emoji: '🧹' },
+    { name: 'Appointments', color: '#607D8B', emoji: '📅' },
+    { name: 'Projects', color: '#3E2723', emoji: '📂' },
+    { name: 'Goals', color: '#CDDC39', emoji: '🎯' },
+    { name: 'Events', color: '#E65100', emoji: '🎉' },
+    { name: 'Ideas', color: '#FFEB3B', emoji: '💡' },
+    { name: 'Relaxation', color: '#00E676', emoji: '🛀' }
+    ];
+    localStorage.setItem('categories', JSON.stringify(defaultCategories));
+    return defaultCategories;
+  }
+  try {
+    const categories = JSON.parse(savedCategories);
+    if (!Array.isArray(categories)) throw new Error('Invalid categories');
+    return categories;
+  } catch {
+    return [];
+  }
+}
+
+function saveCategories(categories) {
+  localStorage.setItem('categories', JSON.stringify(categories));
+}
+
+let draggedIndex = null;
+
+function renderCategories() {
+  const categories = loadCategories();
+  categoryListContainer.innerHTML = '';
+
+  categories.forEach((cat, index) => {
+    if (!cat.name || !cat.color || !cat.emoji) return;
+
+    const catDiv = document.createElement('div');
+    catDiv.className = 'category-item';
+    catDiv.draggable = true;
+    catDiv.dataset.index = index;
+
+    // Styles
+    catDiv.style.backgroundColor = cat.color + '33'; // translucent bg
+    catDiv.style.color = cat.color;
+    catDiv.style.padding = '8px 12px';
+    catDiv.style.margin = '6px 0';
+    catDiv.style.borderRadius = '10px';
+    catDiv.style.display = 'flex';
+    catDiv.style.justifyContent = 'space-between';
+    catDiv.style.alignItems = 'center';
+    catDiv.style.cursor = 'grab';
+    catDiv.style.userSelect = 'none';
+
+    // Content with emoji, name, drag handle, edit & delete buttons
+    catDiv.innerHTML = `
+      <span><span class="emoji">${cat.emoji}</span> ${cat.name}</span>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button class="edit-btn" title="Edit category" 
+          style="background: none; border: none; padding: 0;">
+          <i class="fas fa-pen gradient-icon"></i>
+        </button>
+        <button class="delete-btn" title="Delete category" 
+          style="background: none; border: none; padding: 0;">
+          <i class="fas fa-trash gradient-icon"></i>
+        </button>
+        <span class="drag-handle gradient-icon" title="Drag to reorder">&#x2630;</span>
+      </div>
+    `;
+
+
+
+    // Drag events
+    catDiv.addEventListener('dragstart', () => {
+      draggedIndex = index;
+      catDiv.style.opacity = '0.5';
+    });
+
+    catDiv.addEventListener('dragend', () => {
+      draggedIndex = null;
+      catDiv.style.opacity = '1';
+    });
+
+    catDiv.addEventListener('dragover', e => {
+      e.preventDefault(); // allow drop
+    });
+
+    catDiv.addEventListener('drop', e => {
+      e.preventDefault();
+      if (draggedIndex === null || draggedIndex === index) return;
+
+      const movedCategory = categories.splice(draggedIndex, 1)[0];
+      categories.splice(index, 0, movedCategory);
+
+      saveCategories(categories);
+      renderCategories();
+      // Automatically update categories list every 5 seconds
+      setInterval(() => {
+        renderCategories();
+      }, 5000);
+    });
+
+    // Edit button logic
+    const editBtn = catDiv.querySelector('.edit-btn');
+    editBtn.addEventListener('click', () => {
+      const newName = prompt('Edit category name:', cat.name);
+      if (newName === null) return; // Cancel
+
+      const newEmoji = prompt('Edit emoji:', cat.emoji);
+      if (newEmoji === null) return;
+
+      const newColor = prompt('Edit color (hex code):', cat.color);
+      if (newColor === null) return;
+
+      if (!newName.trim() || !newEmoji.trim() || !newColor.trim()) {
+        alert('All fields are required.');
+        return;
+      }
+
+      categories[index] = {
+        name: newName.trim(),
+        emoji: newEmoji.trim(),
+        color: newColor.trim()
+      };
+
+      saveCategories(categories);
+      renderCategories();
+    });
+
+    // Delete button logic
+    const deleteBtn = catDiv.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', () => {
+      if (confirm(`Delete category "${cat.name}"?`)) {
+        categories.splice(index, 1);
+        saveCategories(categories);
+        renderCategories();
+      }
+    });
+
+    categoryListContainer.appendChild(catDiv);
+  });
+}
+
+addCategoryForm.addEventListener('submit', e => {
+  e.preventDefault();
+
+  const name = e.target.categoryName.value.trim();
+  const emoji = e.target.categoryEmoji.value.trim();
+  const color = e.target.categoryColor.value;
+
+  if (!name || !emoji) {
+    alert('Please enter both category name and emoji.');
+    return;
+  }
+
+  const categories = loadCategories();
+
+  if (categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+    alert('Category with this name already exists.');
+    return;
+  }
+
+  categories.push({ name, emoji, color });
+
+  saveCategories(categories);
+  renderCategories();
+
+  addCategoryForm.reset();
+  colorValue.textContent = '#7b2ff7';
+  colorInput.value = '#7b2ff7';
+});
+
+renderCategories();
+
+
+
+    taskList.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    const li = e.target.closest('li.task-item');
+    if (!li) return;
+
+    const index = Number(li.dataset.index);
+    if (index < 0 || index >= tasks.length) return;
+
+    if (btn.classList.contains('btn-complete')) {
+      // Toggle completed
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks(tasks);
+      renderTasks();
+    } else if (btn.classList.contains('btn-edit')) {
+      // Open modal to edit task
+      openEditModal(index);
+    } else if (btn.classList.contains('btn-delete')) {
+      // Delete task
+      if (confirm('Are you sure you want to delete this task?')) {
+        tasks.splice(index, 1);
+        saveTasks(tasks);
+        renderTasks();
+      }
+    }
+    });
+
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, i) => addTaskToDOM(task, i));
+    }
+
+    function openEditModal(index) {
+      const task = tasks[index];
+      addTodoModal.classList.remove('hidden');
+      // Pre-fill the form
+      addTodoForm.taskName.value = task.name;
+      addTodoForm.taskDescription.value = task.description;
+      addTodoForm.taskDeadline.value = task.deadline;
+      addTodoForm.category.value = task.category;
+      addTodoForm.taskColor.value = task.color;
+      addTodoForm.dataset.editIndex = index; // Store editing index
+    }
+
+
+
+
+
+
+    // Handle add category form submission
+    addCategoryForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('categoryName').value.trim();
+      const emoji = document.getElementById('categoryEmoji').value.trim() || '🗂️';
+      const color = document.getElementById('categoryColor').value;
+
+      if (!name) {
+        alert('Please enter a category name.');
+        return;
+      }
+
+      const categories = loadCategories();
+      categories.push({ name, emoji, color });
+      saveCategories(categories);
+
+      renderCategories();
+      addCategoryForm.reset();
+    });
+
+    // Initial render categories on page load
+    renderCategories();
+
+    // === Theme toggle code ===
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.body.classList.add(prefersDark ? 'dark' : 'light');
+    }
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+      document.body.classList.remove(currentTheme);
+      document.body.classList.add(newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+
+
+ // =======================================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('taskSearch');
+      const sortBtn = document.getElementById('sortBtn');
+      const sortOptions = document.getElementById('sortOptions');
+      const taskList = document.getElementById('taskList');
+
+      // Toggle sort dropdown visibility
+      sortBtn.addEventListener('click', () => {
+        sortOptions.style.display = sortOptions.style.display === 'block' ? 'none' : 'block';
+      });
+
+      // Close dropdown if clicking outside
+      document.addEventListener('click', (e) => {
+        if (!sortBtn.contains(e.target) && !sortOptions.contains(e.target)) {
+          sortOptions.style.display = 'none';
+        }
+      });
+
+      // Filter tasks based on search input
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+
+        Array.from(taskList.children).forEach(li => {
+          const name = li.querySelector('.task-name')?.textContent.toLowerCase() || '';
+          const category = li.querySelector('.tag')?.textContent.toLowerCase() || '';
+          const desc = li.querySelector('.task-desc')?.textContent.toLowerCase() || '';
+
+          if (name.includes(query) || category.includes(query) || desc.includes(query)) {
+            li.style.display = '';
+          } else {
+            li.style.display = 'none';
+          }
+        });
+      });
+
+      // Sort tasks when selecting option
+      sortOptions.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', () => {
+          const sortType = option.dataset.sort;
+
+          // Close dropdown
+          sortOptions.style.display = 'none';
+         // sortBtn.textContent = `Sort: ${option.textContent}`;
+
+          const tasksArray = Array.from(taskList.children);
+
+          tasksArray.sort((a, b) => {
+            let aVal, bVal;
+
+            switch (sortType) {
+              case 'dateCreated':
+                // Assuming you store creation date in a data attribute 'data-created' as ISO string
+                aVal = new Date(a.dataset.created || 0);
+                bVal = new Date(b.dataset.created || 0);
+                return aVal - bVal;
+
+              case 'dueDate':
+                aVal = new Date(a.dataset.deadline || 0);
+                bVal = new Date(b.dataset.deadline || 0);
+                return aVal - bVal;
+
+
+              case 'alphabetical':
+                aVal = a.querySelector('.task-name')?.textContent.toLowerCase() || '';
+                bVal = b.querySelector('.task-name')?.textContent.toLowerCase() || '';
+                return aVal.localeCompare(bVal);
+
+              default:
+                return 0;
+            }
+          });
+
+          tasksArray.forEach(task => taskList.appendChild(task));
+        });
+      });
+
+    });
+
+  </script>
+</body>
+</html>
